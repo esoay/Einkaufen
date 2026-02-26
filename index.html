@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ThriftStyle – Secondhand-Mode</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="navbar" id="startseite">
+      <div class="container nav-content">
+        <a class="brand" href="#startseite">ThriftStyle</a>
+        <nav class="nav-links" aria-label="Hauptnavigation">
+          <a href="#startseite">Startseite</a>
+          <a href="#produkte">Produkte</a>
+          <a href="#kontakt">Kontakt</a>
+        </nav>
+        <button class="cart-button" id="open-cart" aria-label="Warenkorb öffnen">
+          <span class="cart-icon" aria-hidden="true">🛒</span>
+          <span class="cart-count" id="cart-count">0</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container hero-content">
+          <p class="hero-badge">Nachhaltig · Stilvoll · Preiswert</p>
+          <h1>Secondhand-Mode in Top-Zustand zu fairen Preisen</h1>
+          <p>
+            Entdecke sorgfältig ausgewählte Kleidung mit Charakter. Spare Geld, reduziere
+            Verschwendung und finde einzigartige Lieblingsstücke.
+          </p>
+          <a href="#produkte" class="cta">Jetzt stöbern</a>
+        </div>
+      </section>
+
+      <section class="products-section" id="produkte">
+        <div class="container">
+          <div class="section-header">
+            <h2>Unsere Produkte</h2>
+            <p>Filtern, auswählen und direkt in den Warenkorb legen.</p>
+          </div>
+
+          <form class="filters" id="filters" aria-label="Produktfilter">
+            <div class="filter-group">
+              <label for="size-filter">Größe</label>
+              <select id="size-filter" name="size">
+                <option value="alle">Alle</option>
+                <option value="XS">XS</option>
+                <option value="S">S</option>
+                <option value="M">M</option>
+                <option value="L">L</option>
+                <option value="XL">XL</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="condition-filter">Zustand</label>
+              <select id="condition-filter" name="condition">
+                <option value="alle">Alle</option>
+                <option value="Wie neu">Wie neu</option>
+                <option value="Sehr gut">Sehr gut</option>
+                <option value="Gut">Gut</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="price-filter">Max. Preis (€)</label>
+              <input
+                type="number"
+                id="price-filter"
+                name="price"
+                min="0"
+                step="1"
+                placeholder="z. B. 40"
+              />
+            </div>
+          </form>
+
+          <div class="product-grid" id="product-grid" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="cart-panel" id="cart-panel" aria-hidden="true">
+      <div class="cart-header">
+        <h2>Warenkorb</h2>
+        <button id="close-cart" class="icon-button" aria-label="Warenkorb schließen">✕</button>
+      </div>
+
+      <div id="cart-items" class="cart-items"></div>
+
+      <div class="cart-footer">
+        <p>
+          Gesamt:
+          <strong id="cart-total">0,00 €</strong>
+        </p>
+        <button class="checkout-button" type="button">Zur Kasse</button>
+      </div>
+    </aside>
+
+    <div class="backdrop" id="backdrop" hidden></div>
+
+    <footer id="kontakt" class="footer">
+      <div class="container footer-content">
+        <h3>ThriftStyle</h3>
+        <p>Kontakt: hallo@thriftstyle.de · +49 30 1234567</p>
+        <p>© 2026 ThriftStyle. Alle Rechte vorbehalten.</p>
+      </div>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
