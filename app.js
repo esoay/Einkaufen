@@ -3,7 +3,24 @@ const CONDITIONS = ['Neu mit Etikett', 'Wie neu', 'Sehr gut', 'Gut'];
 const CATEGORIES = ['Damen', 'Herren', 'Kinder', 'Elektro', 'Haushalt'];
 const PAYPAL_CLIENT_ID = 'YOUR_PAYPAL_CLIENT_ID';
 
-const products = [
+
+const CATEGORY_PLACEHOLDER_IMAGES = {
+  Damen: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80',
+  Herren: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=900&q=80',
+  Kinder: 'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&w=900&q=80',
+  Elektro: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80',
+  Haushalt: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&w=900&q=80'
+};
+
+function hasValidImageUrl(value) {
+  return typeof value === 'string' && /^https?:\/\//.test(value);
+}
+
+function getSafeImage(product) {
+  return hasValidImageUrl(product.image) ? product.image : (CATEGORY_PLACEHOLDER_IMAGES[product.category] || CATEGORY_PLACEHOLDER_IMAGES.Damen);
+}
+
+let products = [
   { id: 1, title: 'Leinenbluse Weiß', brand: 'Armedangels', price: 29, size: 'S', zustand: 'Wie neu', farbe: 'Weiß', material: 'Leinen', category: 'Damen', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80', locationText: 'Berlin • Versand möglich' },
   { id: 2, title: 'Vintage Jeansjacke', brand: 'Levi\'s', price: 44, size: 'M', zustand: 'Sehr gut', farbe: 'Blau', material: 'Denim', category: 'Herren', image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=800&q=80', locationText: 'Hamburg • Versand möglich' },
   { id: 3, title: 'Kinder Regenjacke', brand: 'Tchibo', price: 14, size: 'XXS', zustand: 'Gut', farbe: 'Gelb', material: 'Polyester', category: 'Kinder', image: 'https://images.unsplash.com/photo-1475180098004-ca77a66827be?auto=format&fit=crop&w=800&q=80', locationText: 'Köln • Abholung' },
@@ -16,6 +33,8 @@ const products = [
   { id: 10, title: 'Cardigan Soft Knit', brand: 'Mango', price: 31, size: '5XL', zustand: 'Sehr gut', farbe: 'Rosa', material: 'Acryl', category: 'Damen', image: 'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=800&q=80', locationText: 'Hannover • Abholung' },
   { id: 11, title: 'Kinder Sneaker Light', brand: 'Puma', price: 22, size: '6XL', zustand: 'Gut', farbe: 'Weiß', material: 'Mesh', category: 'Kinder', image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80', locationText: 'Bremen • Versand möglich' }
 ];
+
+products = products.map((product) => ({ ...product, image: getSafeImage(product) }));
 
 const state = { search: '', brandSelect: '', brandText: '', priceMin: '', priceMax: '', categories: [], conditions: [], sizes: [], colors: [], materials: [], sort: 'newest' };
 const historyKey = 'thriftstyle-history-v2';
@@ -90,13 +109,17 @@ function filterProducts() {
 }
 
 function card(p, withCart = true) {
+  const metaRow = `${p.size} · ${p.zustand} · ${p.farbe}/${p.material}`;
   return `<article class="product-card" data-open="${p.id}">
-    <img src="${p.image}" alt="${p.title}" loading="lazy" />
+    <div class="product-media-wrap">
+      <img src="${getSafeImage(p)}" alt="${p.title}" loading="lazy" onerror="setImageFallback(this)" />
+      <span class="condition-badge">${p.zustand}</span>
+    </div>
     <div class="product-content">
-      <strong>${p.title}</strong>
-      <span>${euro(p.price)}</span>
-      <div class="meta">${p.brand} · ${p.size} · ${p.zustand}</div>
-      <div class="meta">${p.category} · ${p.farbe} · ${p.material}</div>
+      <h3>${p.title}</h3>
+      <div class="meta brand">${p.brand}</div>
+      <div class="price">${euro(p.price)}</div>
+      <div class="meta">${metaRow}</div>
       <div class="meta">${p.locationText}</div>
       ${withCart ? `<button class="primary" data-add="${p.id}" type="button">In den Warenkorb</button>` : ''}
     </div>
@@ -336,6 +359,26 @@ function initCheckoutControls() {
     saveCheckoutPrefs();
     updateTotal();
   });
+}
+
+function setImageFallback(img) {
+  if (!img || img.dataset.fallbackApplied === 'true') return;
+  img.dataset.fallbackApplied = 'true';
+  img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#8b5cf6"/>
+          <stop offset="52%" stop-color="#3b82f6"/>
+          <stop offset="100%" stop-color="#ec4899"/>
+        </linearGradient>
+      </defs>
+      <rect width="400" height="500" fill="url(#g)"/>
+      <circle cx="92" cy="90" r="8" fill="rgba(255,255,255,0.85)"/>
+      <circle cx="300" cy="120" r="6" fill="rgba(255,255,255,0.7)"/>
+      <circle cx="220" cy="340" r="9" fill="rgba(255,255,255,0.72)"/>
+    </svg>
+  `);
 }
 
 function setupActions() {
