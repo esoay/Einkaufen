@@ -32,7 +32,6 @@
         <h2>Filter</h2>
         <button id="close-filter-drawer" class="icon-btn" aria-label="Filtermenü schließen">✕</button>
       </div>
-
       <form id="filters-form" class="drawer-body" aria-label="Erweiterte Produktfilter">
         <label>Marke (Dropdown)
           <select id="brand-select"><option value="">Alle Marken</option></select>
@@ -51,7 +50,6 @@
         <fieldset id="size-filters"><legend>Größe</legend></fieldset>
         <fieldset id="color-filters"><legend>Farbe</legend></fieldset>
         <fieldset id="material-filters"><legend>Material</legend></fieldset>
-
         <div class="drawer-actions">
           <button type="button" id="reset-filters" class="secondary">Filter zurücksetzen</button>
           <button type="button" id="apply-filters" class="primary">Filter anwenden</button>
@@ -117,8 +115,16 @@
         <button id="close-cart" class="icon-btn" aria-label="Warenkorb schließen">✕</button>
       </div>
       <div id="cart-items" class="cart-items"></div>
+      <div class="summary-box">
+        <h3>Preisübersicht</h3>
+        <div class="summary-row"><span>Warenwert</span><strong id="summary-subtotal">0,00 €</strong></div>
+        <div class="summary-row"><span id="summary-shipping-label">Versand</span><strong id="summary-shipping">0,00 €</strong></div>
+        <div id="free-shipping-banner" class="free-shipping-banner" hidden>Kostenloser Versand ab 100 € aktiviert</div>
+        <div class="summary-row"><span>Käuferschutz-Gebühr</span><strong id="summary-protection">0,00 €</strong></div>
+        <div class="summary-row"><span>Versicherung</span><strong id="summary-insurance">0,00 €</strong></div>
+        <div class="summary-row total"><span>Gesamtbetrag</span><strong id="summary-total">0,00 €</strong></div>
+      </div>
       <div class="cart-footer">
-        <strong id="cart-total">0,00 €</strong>
         <button id="open-checkout" class="primary" type="button">Checkout</button>
       </div>
     </aside>
@@ -129,24 +135,51 @@
         <h2>Checkout (Demo)</h2>
         <button id="close-checkout" class="icon-btn" aria-label="Checkout schließen">✕</button>
       </div>
-      <p>Wähle eine Zahlungsart: PayPal, Klarna oder Visa.</p>
-      <div class="payment-options">
-        <section>
-          <h3>PayPal</h3>
-          <div id="paypal-buttons-container">PayPal Buttons laden…</div>
+
+      <div class="checkout-grid">
+        <section class="checkout-section">
+          <h3>Versandoptionen</h3>
+          <fieldset>
+            <legend>Versandart</legend>
+            <label class="filter-option"><input type="radio" name="shipping-speed" value="standard" checked /> Standard (3–5 Werktage)</label>
+            <label class="filter-option"><input type="radio" name="shipping-speed" value="express" /> Express (1–2 Werktage, +7,90 €)</label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Versanddienstleister</legend>
+            <label class="filter-option"><input type="radio" name="shipping-provider" value="DHL" checked /> DHL</label>
+            <label class="filter-option"><input type="radio" name="shipping-provider" value="GLS" /> GLS</label>
+            <label class="filter-option"><input type="radio" name="shipping-provider" value="UPS" /> UPS</label>
+            <label class="filter-option"><input type="radio" name="shipping-provider" value="DPD" /> DPD</label>
+          </fieldset>
+
+          <label class="insurance-toggle">
+            <input id="insurance-toggle" type="checkbox" />
+            Versandversicherung hinzufügen (1,5% vom Warenwert, min 1,49 €, max 9,99 €)
+          </label>
         </section>
-        <section>
-          <h3>Klarna</h3>
-          <button class="secondary" type="button">Mit Klarna zahlen (Demo)</button>
-          <p class="hint">TODO: Klarna Session via Backend (Klarna Payments API) erstellen.</p>
-        </section>
-        <section>
-          <h3>Visa / Karte (Stripe)</h3>
-          <div class="stripe-placeholder">Stripe Payment Element Platzhalter</div>
-          <p class="hint">TODO: clientSecret vom Backend laden und Stripe Elements initialisieren.</p>
+
+        <section class="checkout-section">
+          <h3>Zahlung</h3>
+          <div class="payment-options">
+            <section>
+              <h4>PayPal</h4>
+              <div id="paypal-buttons-container">PayPal Buttons laden…</div>
+            </section>
+            <section>
+              <h4>Klarna</h4>
+              <button class="secondary" type="button">Mit Klarna zahlen (Demo)</button>
+              <p class="hint">TODO: Klarna Session via Backend (Klarna Payments API) erstellen.</p>
+            </section>
+            <section>
+              <h4>Visa / Karte (Stripe)</h4>
+              <div class="stripe-placeholder">Stripe Payment Element Platzhalter</div>
+              <p class="hint">TODO: clientSecret vom Backend laden und Stripe Elements initialisieren.</p>
+            </section>
+          </div>
+          <p class="hint">Hinweis: PayPal/Klarna/Stripe benötigen in Produktion Backend-Endpoints für sichere Keys, Order/Create und clientSecret.</p>
         </section>
       </div>
-      <p class="hint">Hinweis: PayPal/Klarna/Stripe benötigen in Produktion Backend-Endpoints für sichere Keys, Order/Create und clientSecret.</p>
     </dialog>
 
     <script src="app.js"></script>

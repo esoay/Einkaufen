@@ -20,8 +20,10 @@ const products = [
 const state = { search: '', brandSelect: '', brandText: '', priceMin: '', priceMax: '', categories: [], conditions: [], sizes: [], colors: [], materials: [], sort: 'newest' };
 const historyKey = 'thriftstyle-history-v2';
 const cartKey = 'thriftstyle-cart-v2';
+const checkoutPrefsKey = 'thriftstyle-checkout-v1';
 const historyData = JSON.parse(localStorage.getItem(historyKey) || '{"clicks":[],"searches":[],"filters":[]}');
 const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+const checkoutState = JSON.parse(localStorage.getItem(checkoutPrefsKey) || '{"shippingProvider":"DHL","shippingSpeed":"standard","insuranceEnabled":false}');
 
 const $ = (id) => document.getElementById(id);
 const unique = (arr) => [...new Set(arr)];
@@ -46,7 +48,7 @@ function fillChecks(containerId, values, key) {
 
 function renderCategoryRail() {
   const html = ['<button type="button" class="category-chip active" data-category="">Alle</button>']
-    .concat(CATEGORIES.map((category) => `<button type="button" class="category-chip" data-category="${category}">${category}</button>`))
+    .concat(CATEGORIES.map((c) => `<button type="button" class="category-chip" data-category="${c}">${c}</button>`))
     .join('');
   $('category-rail').innerHTML = html;
 }
@@ -124,6 +126,12 @@ function renderRecommendations() {
 function openPanel(panel, backdrop) { panel.classList.add('open'); panel.setAttribute('aria-hidden', 'false'); backdrop.hidden = false; }
 function closePanel(panel, backdrop) { panel.classList.remove('open'); panel.setAttribute('aria-hidden', 'true'); backdrop.hidden = true; }
 
+function persistHistory() {
+  if (state.search) historyData.searches.push(state.search);
+  historyData.filters.push({ categories: state.categories, sizes: state.sizes, brands: [state.brandSelect, state.brandText].filter(Boolean) });
+  localStorage.setItem(historyKey, JSON.stringify(historyData));
+}
+
 function bindFilters() {
   $('search-input').addEventListener('input', (e) => { state.search = e.target.value.trim(); persistHistory(); renderProducts(); });
   $('sort-select').addEventListener('change', (e) => { state.sort = e.target.value; renderProducts(); });
@@ -131,6 +139,7 @@ function bindFilters() {
   $('brand-text').addEventListener('input', (e) => { state.brandText = e.target.value.trim(); });
   $('price-min').addEventListener('input', (e) => { state.priceMin = e.target.value; });
   $('price-max').addEventListener('input', (e) => { state.priceMax = e.target.value; });
+
   $('filters-form').addEventListener('change', (e) => {
     const box = e.target.closest('input[type="checkbox"]');
     if (!box) return;
@@ -159,12 +168,6 @@ function bindFilters() {
   });
 }
 
-function persistHistory() {
-  if (state.search) historyData.searches.push(state.search);
-  historyData.filters.push({ categories: state.categories, sizes: state.sizes, brands: [state.brandSelect, state.brandText].filter(Boolean) });
-  localStorage.setItem(historyKey, JSON.stringify(historyData));
-}
-
 function setupImageSearch() {
   $('image-upload').addEventListener('change', (e) => {
     const file = e.target.files?.[0];
@@ -186,7 +189,6 @@ function setupImageSearch() {
 
 async function searchByImage(file, hints = {}) {
   // TODO: Hier später echten Embedding/Vector-Search API-Call ergänzen (Backend + Index erforderlich).
-  // MVP: Simulierte Bildsuche über ausgewählte Attribute und optional Dateiname als Heuristik.
   const nameHint = (file?.name || '').toLowerCase();
   return products.filter((p) => {
     const categoryOk = !hints.category || p.category === hints.category;
@@ -196,20 +198,151 @@ async function searchByImage(file, hints = {}) {
   }).map((p) => p.id);
 }
 
-function renderCart() {
-  $('cart-items').innerHTML = cart.length ? cart.map((item) => `<div class="cart-item"><strong>${item.title}</strong><div>${euro(item.price)}</div></div>`).join('') : '<p>Warenkorb ist leer.</p>';
-  $('cart-total').textContent = euro(cart.reduce((sum, x) => sum + x.price, 0));
-  $('cart-count').textContent = cart.length;
+function addToCart(productId) {
+  const existing = cart.find((item) => item.id === productId);
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    const product = products.find((p) => p.id === productId);
+    cart.push({ ...product, quantity: 1 });
+  }
+  renderCart();
+}
+
+function updateCartQuantity(productId, delta) {
+  const item = cart.find((entry) => entry.id === productId);
+  if (!item) return;
+  item.quantity += delta;
+  if (item.quantity <= 0) {
+    const idx = cart.findIndex((entry) => entry.id === productId);
+    cart.splice(idx, 1);
+  }
+  renderCart();
+}
+
+function getSubtotal() {
+  return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+
+function getItemCount() {
+  return cart.reduce((sum, item) => sum + item.quantity, 0);
+}
+
+function calculateShipping(cartItems, shippingProvider, shippingSpeed) {
+  const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  let baseShipping = 0;
+  if (itemCount >= 1 && itemCount <= 2) baseShipping = 4.9;
+  else if (itemCount >= 3 && itemCount <= 5) baseShipping = 6.9;
+  else if (itemCount >= 6) baseShipping = 9.9;
+
+  const providerSurchargeMap = { DHL: 0, GLS: 0.5, UPS: 1.5, DPD: 0.75 };
+  const providerSurcharge = providerSurchargeMap[shippingProvider] || 0;
+
+  const freeStandardActive = subtotal >= 100 && shippingSpeed === 'standard';
+  const effectiveBase = freeStandardActive ? 0 : baseShipping;
+  const expressFee = shippingSpeed === 'express' ? EXPRESS_SURCHARGE : 0;
+
+  const shippingTotal = effectiveBase + providerSurcharge + expressFee;
+  return {
+    shippingTotal,
+    baseShipping,
+    providerSurcharge,
+    expressFee,
+    freeStandardActive,
+    label: `${shippingProvider} · ${shippingSpeed === 'express' ? 'Express (1–2 Werktage)' : 'Standard (3–5 Werktage)'}`
+  };
+}
+
+function calculateBuyerProtection(subtotal) {
+  if (!subtotal) return 0;
+  return subtotal * 0.02 + 0.5;
+}
+
+function calculateInsurance(subtotal, insuranceEnabled) {
+  if (!insuranceEnabled || !subtotal) return 0;
+  return Math.min(9.99, Math.max(1.49, subtotal * 0.015));
+}
+
+function saveCheckoutPrefs() {
+  localStorage.setItem(checkoutPrefsKey, JSON.stringify(checkoutState));
+}
+
+function updateTotal() {
+  const subtotal = getSubtotal();
+  const shipping = calculateShipping(cart, checkoutState.shippingProvider, checkoutState.shippingSpeed);
+  const buyerProtection = calculateBuyerProtection(subtotal);
+  const insurance = calculateInsurance(subtotal, checkoutState.insuranceEnabled);
+  const total = subtotal + shipping.shippingTotal + buyerProtection + insurance;
+
+  $('summary-subtotal').textContent = euro(subtotal);
+  $('summary-shipping-label').textContent = `Versand (${shipping.label})`;
+  $('summary-shipping').textContent = euro(shipping.shippingTotal);
+  $('summary-protection').textContent = euro(buyerProtection);
+  $('summary-insurance').textContent = euro(insurance);
+  $('summary-total').textContent = euro(total);
+
+  $('free-shipping-banner').hidden = !shipping.freeStandardActive;
+
   localStorage.setItem(cartKey, JSON.stringify(cart));
+}
+
+function renderCart() {
+  if (!cart.length) {
+    $('cart-items').innerHTML = '<p>Warenkorb ist leer.</p>';
+  } else {
+    $('cart-items').innerHTML = cart.map((item) => `
+      <div class="cart-item">
+        <div>
+          <strong>${item.title}</strong>
+          <div>${euro(item.price)} · ${item.size}</div>
+        </div>
+        <div class="cart-item-actions">
+          <button class="qty-btn" data-qty="${item.id}" data-delta="-1" aria-label="Menge verringern">−</button>
+          <span>${item.quantity}</span>
+          <button class="qty-btn" data-qty="${item.id}" data-delta="1" aria-label="Menge erhöhen">+</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  $('cart-count').textContent = getItemCount();
+  updateTotal();
+}
+
+function initCheckoutControls() {
+  document.querySelectorAll('input[name="shipping-provider"]').forEach((radio) => {
+    radio.checked = radio.value === checkoutState.shippingProvider;
+    radio.addEventListener('change', (e) => {
+      checkoutState.shippingProvider = e.target.value;
+      saveCheckoutPrefs();
+      updateTotal();
+    });
+  });
+
+  document.querySelectorAll('input[name="shipping-speed"]').forEach((radio) => {
+    radio.checked = radio.value === checkoutState.shippingSpeed;
+    radio.addEventListener('change', (e) => {
+      checkoutState.shippingSpeed = e.target.value;
+      saveCheckoutPrefs();
+      updateTotal();
+    });
+  });
+
+  $('insurance-toggle').checked = !!checkoutState.insuranceEnabled;
+  $('insurance-toggle').addEventListener('change', (e) => {
+    checkoutState.insuranceEnabled = e.target.checked;
+    saveCheckoutPrefs();
+    updateTotal();
+  });
 }
 
 function setupActions() {
   $('product-grid').addEventListener('click', (e) => {
     const add = e.target.closest('[data-add]');
     if (add) {
-      const p = products.find((x) => x.id === Number(add.dataset.add));
-      cart.push(p);
-      renderCart();
+      addToCart(Number(add.dataset.add));
       return;
     }
     const open = e.target.closest('[data-open]');
@@ -220,11 +353,16 @@ function setupActions() {
     }
   });
 
+  $('cart-items').addEventListener('click', (e) => {
+    const qtyButton = e.target.closest('[data-qty]');
+    if (!qtyButton) return;
+    updateCartQuantity(Number(qtyButton.dataset.qty), Number(qtyButton.dataset.delta));
+  });
+
   $('category-rail').addEventListener('click', (e) => {
     const button = e.target.closest('[data-category]');
     if (!button) return;
-    const category = button.dataset.category;
-    state.categories = category ? [category] : [];
+    state.categories = button.dataset.category ? [button.dataset.category] : [];
     syncCategoryUi();
     persistHistory();
     renderProducts();
@@ -260,6 +398,7 @@ renderCategoryRail();
 bindFilters();
 setupImageSearch();
 setupActions();
+initCheckoutControls();
 syncCategoryUi();
 renderProducts();
 renderRecommendations();
