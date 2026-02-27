@@ -20,6 +20,9 @@
         <div class="search-wrap">
           <input id="search-input" type="search" placeholder="Suche nach Titel, Marke, Material, Farbe" aria-label="Produkte durchsuchen" />
         </div>
+
+        <div class="account-nav" id="account-nav"></div>
+
         <button class="cart-button" id="open-cart" aria-label="Warenkorb öffnen">
           <span aria-hidden="true">🛒</span>
           <span class="cart-count" id="cart-count">0</span>
@@ -65,7 +68,66 @@
         <p>Nachhaltig einkaufen mit präziser Suche, Bildsuche und smarten Empfehlungen.</p>
       </section>
 
-      <div class="shop-layout">
+      <section id="account-view" class="account-section" hidden>
+        <div class="section-head">
+          <h2>Mein Konto</h2>
+          <button type="button" id="back-to-shop" class="secondary">Zurück zum Shop</button>
+        </div>
+        <div class="account-card" id="account-summary"></div>
+      </section>
+
+      <section id="sell-view" class="account-section" hidden>
+        <div class="section-head">
+          <h2>Artikel einstellen</h2>
+          <button type="button" id="back-to-shop-2" class="secondary">Zurück zum Shop</button>
+        </div>
+        <form id="sell-form" class="sell-form" aria-label="Artikel einstellen Formular">
+          <div class="form-grid">
+            <label>Titel*
+              <input id="sell-title" required aria-label="Titel" type="text" maxlength="70" />
+            </label>
+            <label>Marke*
+              <input id="sell-brand" required aria-label="Marke" type="text" />
+            </label>
+            <label>Preis (EUR)*
+              <input id="sell-price" required aria-label="Preis in Euro" type="number" min="1" step="0.01" />
+            </label>
+            <label>Größe*
+              <select id="sell-size" required aria-label="Größe"></select>
+            </label>
+            <label>Zustand*
+              <select id="sell-condition" required aria-label="Zustand"></select>
+            </label>
+            <label>Farbe*
+              <input id="sell-color" required aria-label="Farbe" type="text" />
+            </label>
+            <label>Material*
+              <input id="sell-material" required aria-label="Material" type="text" />
+            </label>
+            <label>Kategorie*
+              <select id="sell-category" required aria-label="Kategorie"></select>
+            </label>
+          </div>
+          <label>Beschreibung
+            <textarea id="sell-description" rows="3" aria-label="Beschreibung"></textarea>
+          </label>
+          <label>Bilder (1-3, image/*)*
+            <input id="sell-images" type="file" multiple accept="image/*" aria-label="Produktbilder" />
+          </label>
+          <p id="sell-form-error" class="form-error" role="alert" aria-live="polite"></p>
+          <button type="submit" class="primary">Artikel veröffentlichen</button>
+        </form>
+      </section>
+
+      <section id="my-items-view" class="account-section" hidden>
+        <div class="section-head">
+          <h2>Meine Artikel</h2>
+          <button type="button" id="back-to-shop-3" class="secondary">Zurück zum Shop</button>
+        </div>
+        <div id="my-items-list" class="product-grid"></div>
+      </section>
+
+      <div id="shop-view" class="shop-layout">
         <aside class="category-sidebar" aria-label="Kategorienleiste">
           <h2>Kategorien</h2>
           <div id="category-rail" class="category-rail"></div>
@@ -130,6 +192,27 @@
     </aside>
     <div id="cart-backdrop" class="overlay" hidden></div>
 
+    <dialog id="auth-modal" class="checkout-modal auth-modal">
+      <div class="drawer-header">
+        <h2 id="auth-title">Anmelden</h2>
+        <button id="close-auth" class="icon-btn" aria-label="Anmelden schließen">✕</button>
+      </div>
+      <form id="auth-form" class="drawer-body" aria-label="Anmelden und Registrieren">
+        <label id="register-name-wrap" hidden>Name
+          <input id="auth-name" type="text" aria-label="Name" />
+        </label>
+        <label>E-Mail
+          <input id="auth-email" type="email" required aria-label="E-Mail" />
+        </label>
+        <label>Passwort
+          <input id="auth-password" type="password" required minlength="6" aria-label="Passwort" />
+        </label>
+        <p id="auth-error" class="form-error" role="alert" aria-live="polite"></p>
+        <button type="submit" class="primary" id="auth-submit">Anmelden</button>
+        <button type="button" class="secondary" id="toggle-auth-mode">Noch kein Konto? Registrieren</button>
+      </form>
+    </dialog>
+
     <dialog id="checkout-modal" class="checkout-modal">
       <div class="drawer-header">
         <h2>Checkout (Demo)</h2>
@@ -181,6 +264,8 @@
         </section>
       </div>
     </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
     <script src="app.js"></script>
   </body>
