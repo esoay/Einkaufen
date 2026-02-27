@@ -2,7 +2,6 @@ const SIZES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', '5XL', '6X
 const CONDITIONS = ['Neu mit Etikett', 'Wie neu', 'Sehr gut', 'Gut'];
 const CATEGORIES = ['Damen', 'Herren', 'Kinder', 'Elektro', 'Haushalt'];
 const PAYPAL_CLIENT_ID = 'YOUR_PAYPAL_CLIENT_ID';
-const EXPRESS_SURCHARGE = 7.9;
 
 const products = [
   { id: 1, title: 'Leinenbluse Weiß', brand: 'Armedangels', price: 29, size: 'S', zustand: 'Wie neu', farbe: 'Weiß', material: 'Leinen', category: 'Damen', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80', locationText: 'Berlin • Versand möglich' },
