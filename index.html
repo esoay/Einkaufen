@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ThriftStyle – Secondhand-Mode</title>
+    <title>ThriftStyle – Secondhand-Shop</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -13,108 +13,174 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="navbar" id="startseite">
+    <header class="navbar">
       <div class="container nav-content">
-        <a class="brand" href="#startseite">ThriftStyle</a>
-        <nav class="nav-links" aria-label="Hauptnavigation">
-          <a href="#startseite">Startseite</a>
-          <a href="#produkte">Produkte</a>
-          <a href="#kontakt">Kontakt</a>
-        </nav>
+        <button id="open-filter-drawer" class="icon-btn" aria-label="Filtermenü öffnen">☰</button>
+        <a class="brand" href="#">ThriftStyle</a>
+        <div class="search-wrap">
+          <input id="search-input" type="search" placeholder="Suche nach Titel, Marke, Material, Farbe" aria-label="Produkte durchsuchen" />
+        </div>
         <button class="cart-button" id="open-cart" aria-label="Warenkorb öffnen">
-          <span class="cart-icon" aria-hidden="true">🛒</span>
+          <span aria-hidden="true">🛒</span>
           <span class="cart-count" id="cart-count">0</span>
         </button>
       </div>
     </header>
 
-    <main>
+    <aside id="filter-drawer" class="drawer" aria-hidden="true">
+      <div class="drawer-header">
+        <h2>Filter</h2>
+        <button id="close-filter-drawer" class="icon-btn" aria-label="Filtermenü schließen">✕</button>
+      </div>
+      <form id="filters-form" class="drawer-body" aria-label="Erweiterte Produktfilter">
+        <label>Marke (Dropdown)
+          <select id="brand-select"><option value="">Alle Marken</option></select>
+        </label>
+        <label>Marke (Freitext)
+          <input id="brand-text" type="text" placeholder="z. B. Levi's" />
+        </label>
+        <label>Preis min (€)
+          <input id="price-min" type="number" min="0" step="1" placeholder="0" />
+        </label>
+        <label>Preis max (€)
+          <input id="price-max" type="number" min="0" step="1" placeholder="100" />
+        </label>
+        <fieldset id="category-filters"><legend>Kategorie</legend></fieldset>
+        <fieldset id="condition-filters"><legend>Zustand</legend></fieldset>
+        <fieldset id="size-filters"><legend>Größe</legend></fieldset>
+        <fieldset id="color-filters"><legend>Farbe</legend></fieldset>
+        <fieldset id="material-filters"><legend>Material</legend></fieldset>
+        <div class="drawer-actions">
+          <button type="button" id="reset-filters" class="secondary">Filter zurücksetzen</button>
+          <button type="button" id="apply-filters" class="primary">Filter anwenden</button>
+        </div>
+      </form>
+    </aside>
+
+    <div id="drawer-backdrop" class="overlay" hidden></div>
+
+    <main class="container main-content">
       <section class="hero">
-        <div class="container hero-content">
-          <p class="hero-badge">Nachhaltig · Stilvoll · Preiswert</p>
-          <h1>Secondhand-Mode in Top-Zustand zu fairen Preisen</h1>
-          <p>
-            Entdecke sorgfältig ausgewählte Kleidung mit Charakter. Spare Geld, reduziere
-            Verschwendung und finde einzigartige Lieblingsstücke.
-          </p>
-          <a href="#produkte" class="cta">Jetzt stöbern</a>
-        </div>
+        <h1>Secondhand, smarter shoppen.</h1>
+        <p>Nachhaltig einkaufen mit präziser Suche, Bildsuche und smarten Empfehlungen.</p>
       </section>
 
-      <section class="products-section" id="produkte">
-        <div class="container">
-          <div class="section-header">
-            <h2>Unsere Produkte</h2>
-            <p>Filtern, auswählen und direkt in den Warenkorb legen.</p>
-          </div>
+      <div class="shop-layout">
+        <aside class="category-sidebar" aria-label="Kategorienleiste">
+          <h2>Kategorien</h2>
+          <div id="category-rail" class="category-rail"></div>
+        </aside>
 
-          <form class="filters" id="filters" aria-label="Produktfilter">
-            <div class="filter-group">
-              <label for="size-filter">Größe</label>
-              <select id="size-filter" name="size">
-                <option value="alle">Alle</option>
-                <option value="XS">XS</option>
-                <option value="S">S</option>
-                <option value="M">M</option>
-                <option value="L">L</option>
-                <option value="XL">XL</option>
+        <div class="shop-content">
+          <section>
+            <h2>Empfohlen für dich</h2>
+            <div id="recommended-grid" class="product-grid"></div>
+          </section>
+
+          <section class="image-search">
+            <h2>Suche per Bild</h2>
+            <label class="upload-box" for="image-upload" aria-label="Bild für Produktsuche hochladen">
+              <input id="image-upload" type="file" accept="image/*" />
+              <span>Bild hochladen oder hier klicken</span>
+            </label>
+            <img id="image-preview" alt="Vorschau des hochgeladenen Bildes" hidden />
+            <div class="image-search-controls">
+              <select id="image-category">
+                <option value="">Kategorie wählen</option>
+                <option>Damen</option><option>Herren</option><option>Kinder</option><option>Elektro</option><option>Haushalt</option>
+              </select>
+              <select id="image-color"><option value="">Farbe wählen</option></select>
+              <button id="image-search-btn" class="primary" type="button">Bildsuche starten</button>
+            </div>
+          </section>
+
+          <section>
+            <div class="section-head">
+              <h2>Produkte</h2>
+              <select id="sort-select" aria-label="Produkte sortieren">
+                <option value="newest">Neueste</option>
+                <option value="price-asc">Preis ↑</option>
+                <option value="price-desc">Preis ↓</option>
               </select>
             </div>
-
-            <div class="filter-group">
-              <label for="condition-filter">Zustand</label>
-              <select id="condition-filter" name="condition">
-                <option value="alle">Alle</option>
-                <option value="Wie neu">Wie neu</option>
-                <option value="Sehr gut">Sehr gut</option>
-                <option value="Gut">Gut</option>
-              </select>
-            </div>
-
-            <div class="filter-group">
-              <label for="price-filter">Max. Preis (€)</label>
-              <input
-                type="number"
-                id="price-filter"
-                name="price"
-                min="0"
-                step="1"
-                placeholder="z. B. 40"
-              />
-            </div>
-          </form>
-
-          <div class="product-grid" id="product-grid" aria-live="polite"></div>
+            <div id="product-grid" class="product-grid" aria-live="polite"></div>
+          </section>
         </div>
-      </section>
+      </div>
     </main>
 
     <aside class="cart-panel" id="cart-panel" aria-hidden="true">
-      <div class="cart-header">
+      <div class="drawer-header">
         <h2>Warenkorb</h2>
-        <button id="close-cart" class="icon-button" aria-label="Warenkorb schließen">✕</button>
+        <button id="close-cart" class="icon-btn" aria-label="Warenkorb schließen">✕</button>
       </div>
-
       <div id="cart-items" class="cart-items"></div>
-
+      <div class="summary-box">
+        <h3>Preisübersicht</h3>
+        <div class="summary-row"><span>Warenwert</span><strong id="summary-subtotal">0,00 €</strong></div>
+        <div class="summary-row"><span id="summary-shipping-label">Versand</span><strong id="summary-shipping">0,00 €</strong></div>
+        <div id="free-shipping-banner" class="free-shipping-banner" hidden>Kostenloser Versand ab 100 € aktiviert</div>
+        <div class="summary-row"><span>Käuferschutz-Gebühr</span><strong id="summary-protection">0,00 €</strong></div>
+        <div class="summary-row"><span>Versicherung</span><strong id="summary-insurance">0,00 €</strong></div>
+        <div class="summary-row total"><span>Gesamtbetrag</span><strong id="summary-total">0,00 €</strong></div>
+      </div>
       <div class="cart-footer">
-        <p>
-          Gesamt:
-          <strong id="cart-total">0,00 €</strong>
-        </p>
-        <button class="checkout-button" type="button">Zur Kasse</button>
+        <button id="open-checkout" class="primary" type="button">Checkout</button>
       </div>
     </aside>
+    <div id="cart-backdrop" class="overlay" hidden></div>
 
-    <div class="backdrop" id="backdrop" hidden></div>
-
-    <footer id="kontakt" class="footer">
-      <div class="container footer-content">
-        <h3>ThriftStyle</h3>
-        <p>Kontakt: hallo@thriftstyle.de · +49 30 1234567</p>
-        <p>© 2026 ThriftStyle. Alle Rechte vorbehalten.</p>
+    <dialog id="checkout-modal" class="checkout-modal">
+      <div class="drawer-header">
+        <h2>Checkout (Demo)</h2>
+        <button id="close-checkout" class="icon-btn" aria-label="Checkout schließen">✕</button>
       </div>
-    </footer>
+
+      <div class="checkout-grid">
+        <section class="checkout-section">
+          <h3>Versandoptionen</h3>
+          <fieldset>
+            <legend>Versandart</legend>
+            <label class="filter-option"><input type="radio" name="shipping-speed" value="standard" checked /> Standard (3–5 Werktage)</label>
+            <label class="filter-option"><input type="radio" name="shipping-speed" value="express" /> Express (1–2 Werktage, +7,90 €)</label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Versanddienstleister</legend>
+            <label class="filter-option"><input type="radio" name="shipping-provider" value="DHL" checked /> DHL</label>
+            <label class="filter-option"><input type="radio" name="shipping-provider" value="GLS" /> GLS</label>
+            <label class="filter-option"><input type="radio" name="shipping-provider" value="UPS" /> UPS</label>
+            <label class="filter-option"><input type="radio" name="shipping-provider" value="DPD" /> DPD</label>
+          </fieldset>
+
+          <label class="insurance-toggle">
+            <input id="insurance-toggle" type="checkbox" />
+            Versandversicherung hinzufügen (1,5% vom Warenwert, min 1,49 €, max 9,99 €)
+          </label>
+        </section>
+
+        <section class="checkout-section">
+          <h3>Zahlung</h3>
+          <div class="payment-options">
+            <section>
+              <h4>PayPal</h4>
+              <div id="paypal-buttons-container">PayPal Buttons laden…</div>
+            </section>
+            <section>
+              <h4>Klarna</h4>
+              <button class="secondary" type="button">Mit Klarna zahlen (Demo)</button>
+              <p class="hint">TODO: Klarna Session via Backend (Klarna Payments API) erstellen.</p>
+            </section>
+            <section>
+              <h4>Visa / Karte (Stripe)</h4>
+              <div class="stripe-placeholder">Stripe Payment Element Platzhalter</div>
+              <p class="hint">TODO: clientSecret vom Backend laden und Stripe Elements initialisieren.</p>
+            </section>
+          </div>
+          <p class="hint">Hinweis: PayPal/Klarna/Stripe benötigen in Produktion Backend-Endpoints für sichere Keys, Order/Create und clientSecret.</p>
+        </section>
+      </div>
+    </dialog>
 
     <script src="app.js"></script>
   </body>
